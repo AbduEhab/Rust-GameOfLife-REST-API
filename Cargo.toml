@@ -25,6 +25,7 @@ poem = "1"
 poem-openapi = { version = "2", features = ["swagger-ui"]}
 minreq = { version = "2.11.0", features = ["punycode"] }
 tokio = { version = "1", features = ["full"] }
+rand = "0.8.5"
 
 [target.x86_64-unknown-linux-gnu]
 linker = "clang"
