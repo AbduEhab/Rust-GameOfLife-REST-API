@@ -63,6 +63,18 @@ fn setup(
     ));
 }
 
+// create a bevy component
+#[derive(Component)]
+struct GOL{
+    cells: [Cell; 64 * 64]
+}
+
+
+struct Cell {
+    alive: bool,
+    neighbors: u8,
+}
+
 fn test_call() {
     let name = "world";
 
