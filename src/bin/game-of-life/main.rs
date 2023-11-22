@@ -133,7 +133,7 @@ fn process_cells(
 
         // get the new state of the cell
         let new_state = minreq::get(format!(
-            "http://127.0.0.1:3000/api/gof?neigbors={}&state={}",
+            "http://127.0.0.1:3000/api/gof?neigbors={}&state={}", // <-------- ERROR HERE FOR SOME REASON. PROBABLY BECAUSE OF THE QUERY PARAMS
             neighbors.to_string(), unchanged_cells[cell_id].to_string()
         ))
         .send();
