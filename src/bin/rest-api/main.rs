@@ -6,10 +6,39 @@ struct Api;
 #[OpenApi]
 impl Api {
     #[oai(path = "/gof", method = "get")]
-    async fn index(&self, neigbors: Query<Option<String>>) -> PlainText<String> {
-        match neigbors.0 {
-            Some(name) => PlainText(true.to_string()),
-            None => PlainText(false.to_string()),
+    async fn index(
+        &self,
+        neigbors: Query<Option<String>>,
+        state: Query<Option<String>>,
+    ) -> PlainText<String> {
+        let neigbors = neigbors.0.unwrap().parse::<i32>().unwrap();
+        let state = state.0.unwrap().parse::<bool>().unwrap();
+
+        match neigbors {
+            1 | 4 => match state {
+                true => PlainText(false.to_string()),
+                false => PlainText(state.to_string()),
+            },
+
+            3 => match state {
+                true => PlainText(state.to_string()),
+                false => PlainText(true.to_string()),
+            },
+            _ => PlainText(state.to_string()),
+        }
+    }
+
+    #[oai(path = "/hello", method = "get")]
+    async fn great(
+        &self,
+        name: Query<Option<String>>,
+        num: Query<Option<String>>,
+    ) -> PlainText<String> {
+        let num = num.0.unwrap().parse::<i32>().unwrap();
+
+        match name.0 {
+            Some(name) => PlainText(format!("hello, {} {}!", name, num)),
+            None => PlainText("hello!".to_string()),
         }
     }
 }
