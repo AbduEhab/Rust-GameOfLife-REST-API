@@ -23,25 +23,21 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    // spawn 32*32*32 cubes
-    for x in 0..32 {
-        for y in 0..32 {
-            for z in 0..32 {
+    // spawn 16*16*16 cubes with some padding between them
+    for x in 0..16 {
+        for y in 0..16 {
+            for z in 0..16 {
                 commands
                     .spawn(PbrBundle {
                         mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
                         material: materials.add(Color::rgb(0.0, 0.0, 0.0).into()),
                         transform: Transform::from_translation(Vec3::new(
-                            x as f32 - 16.0,
-                            y as f32 - 16.0,
-                            z as f32 - 16.0,
+                            x as f32 * 1.2 - 10.0,
+                            y as f32 * 1.2 - 10.0,
+                            z as f32 * 1.2 - 10.0,
                         )),
                         ..Default::default()
-                    })
-                    .insert(Cell {
-                        alive: rand::thread_rng().gen_bool(0.5),
-                    })
-                    .insert(id(x * 32 * 32 + y * 32 + z));
+                    }).insert(Cell { alive: false });
             }
         }
     }
@@ -91,47 +87,47 @@ struct Cell {
 }
 
 fn process_cells(mut cells: Query<(&mut Cell, &id, &mut Handle<StandardMaterial>)>) {
-    let i = 0;
+    // let i = 0;
 
-    for (mut cell, cell_id, material) in cells.iter_mut() {
-        // find the cell's neighbors (8)
-        let mut neighbors = 0;
+    // for (mut cell, cell_id, material) in cells.iter_mut() {
+    //     // find the cell's neighbors (8)
+    //     let mut neighbors = 0;
 
-        let cell_id = cell_id.0;
+    //     let cell_id = cell_id.0;
 
-        let (x, y, z) = (cell_id / (32 * 32), (cell_id / 32) % 32, cell_id % 32);
+    //     let (x, y, z) = (cell_id / (32 * 32), (cell_id / 32) % 32, cell_id % 32);
 
-        // get the state of the 8 neighbors
-        for i in -1..2 {
-            for j in -1..2 {
-                for k in -1..2 {
-                    if i == 0 && j == 0 && k == 0 {
-                        continue;
-                    }
+    //     // get the state of the 8 neighbors
+    //     for i in -1..2 {
+    //         for j in -1..2 {
+    //             for k in -1..2 {
+    //                 if i == 0 && j == 0 && k == 0 {
+    //                     continue;
+    //                 }
 
-                    let (x, y, z) = (
-                        (x as i32 + i) as u32,
-                        (y as i32 + j) as u32,
-                        (z as i32 + k) as u32,
-                    );
+    //                 let (x, y, z) = (
+    //                     (x as i32 + i) as u32,
+    //                     (y as i32 + j) as u32,
+    //                     (z as i32 + k) as u32,
+    //                 );
 
-                    let neighbor_id = x * 32 * 32 + y * 32 + z;
+    //                 let neighbor_id = x * 32 * 32 + y * 32 + z;
 
-                    if neighbor_id >= 32 * 32 * 32 {
-                        continue;
-                    }
+    //                 if neighbor_id >= 32 * 32 * 32 {
+    //                     continue;
+    //                 }
 
-                    let neighbor = cells.get_mut(id(neighbor_id as usize));
+    //                 // let neighbor = cells.get_mut(id(neighbor_id as usize));
 
-                    if neighbor.is_ok() {
-                        if neighbor.unwrap().alive {
-                            neighbors += 1;
-                        }
-                    }
-                }
-            }
-        }
-    }
+    //                 // if neighbor.is_ok() {
+    //                 //     if neighbor.unwrap().alive {
+    //                 //         neighbors += 1;
+    //                 //     }
+    //                 // }
+    //             }
+    //         }
+    //     }
+    // }
 
     // let name = "world";
 

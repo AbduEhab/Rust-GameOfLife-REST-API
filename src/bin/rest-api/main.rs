@@ -5,11 +5,11 @@ struct Api;
 
 #[OpenApi]
 impl Api {
-    #[oai(path = "/hello", method = "get")]
-    async fn index(&self, name: Query<Option<String>>) -> PlainText<String> {
-        match name.0 {
-            Some(name) => PlainText(format!("hello, {}!", name)),
-            None => PlainText("hello!".to_string()),
+    #[oai(path = "/gof", method = "get")]
+    async fn index(&self, neigbors: Query<Option<String>>) -> PlainText<String> {
+        match neigbors.0 {
+            Some(name) => PlainText(true.to_string()),
+            None => PlainText(false.to_string()),
         }
     }
 }
@@ -17,7 +17,7 @@ impl Api {
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
     let api_service =
-        OpenApiService::new(Api, "Hello World", "1.0").server("http://localhost:3000/api");
+        OpenApiService::new(Api, "Game Of Life API", "1.0").server("http://localhost:3000/api");
     let ui = api_service.swagger_ui();
     let app = Route::new().nest("/api", api_service).nest("/", ui);
 
