@@ -2,7 +2,7 @@
 
 use std::f32::consts::PI;
 
-use bevy::{pbr::CascadeShadowConfigBuilder, prelude::*, utils::petgraph::visit::EdgeRef};
+use bevy::prelude::*;
 use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
 
 use rand::prelude::*;
@@ -21,7 +21,11 @@ fn setup(
                 commands
                     .spawn(PbrBundle {
                         mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
-                        material: materials.add(Color::rgb(0.0, 0.0, 0.0).into()),
+                        material: materials.add(StandardMaterial {
+                            base_color: Color::rgba(0., 0., 0., 1.0),
+                            alpha_mode: AlphaMode::Add,
+                            ..default()
+                        }),
                         transform: Transform::from_translation(Vec3::new(
                             x as f32 * 1.2 - 6.0,
                             y as f32 * 1.2 - 6.0,
@@ -89,11 +93,10 @@ struct Cells {
 }
 
 fn process_cells(
-    cells: ResMut<Cells>,
+    mut cells: ResMut<Cells>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut material_data: Query<(&id, &Handle<StandardMaterial>)>,
 ) {
-    
     let unchanged_cells = cells.state.clone();
 
     for (cell_id, material_handle) in material_data.iter_mut() {
@@ -105,27 +108,19 @@ fn process_cells(
         let (x, y, z) = (cell_id / (12 * 12), (cell_id / 12) % 12, cell_id % 12);
 
         // get the state of the 8 neighbors
-        for i in -1..2 {
-            for j in -1..2 {
-                for k in -1..2 {
-                    if i == 0 && j == 0 && k == 0 {
-                        continue;
-                    }
+        if x == 0 && y == 0 && z == 0 {
+            for i in 0..2 {
+                for j in 0..2 {
+                    for k in 0..2 {
+                        if i == 0 && j == 0 && k == 0 {
+                            continue;
+                        }
 
-                    let (x, y, z) = (
-                        (x as i32 + i) as u32,
-                        (y as i32 + j) as u32,
-                        (z as i32 + k) as u32,
-                    );
+                        let neighbor_id = (x + i) * 12 * 12 + (y + j) * 12 + (z + k);
 
-                    let neighbor_id = x * 12 * 12 + y * 12 + z;
-
-                    if neighbor_id >= 12 * 12 * 12 {
-                        continue;
-                    }
-
-                    if unchanged_cells[neighbor_id as usize] {
-                        neighbors += 1;
+                        if cells.state[neighbor_id] {
+                            neighbors += 1;
+                        }
                     }
                 }
             }
@@ -134,34 +129,34 @@ fn process_cells(
         // get the new state of the cell
         let new_state = minreq::get(format!(
             "http://127.0.0.1:3000/api/gof?neigbors={}&state={}", // <-------- ERROR HERE FOR SOME REASON. PROBABLY BECAUSE OF THE QUERY PARAMS
-            neighbors.to_string(), unchanged_cells[cell_id].to_string()
+            neighbors.to_string(),
+            unchanged_cells[cell_id].to_string()
         ))
         .send();
 
-        if let Err(err) = new_state {
-            print!("{}", err);
+        let material = materials.get_mut(material_handle).unwrap();
+
+        // update the cell's material and state
+        if new_state.unwrap().as_str().unwrap() == "true" {
+            material.base_color = Color::rgba(0.0, 0.0, 0.0, 1.0);
+            cells.state[cell_id] = true;
+        } else {
+            material.base_color = Color::rgba(0.0, 0.0, 0.0, 0.0);
+            cells.state[cell_id] = false;
         }
-
-    return;
-
-        // let material = materials.get_mut(material_handle).unwrap();
-
-        // // update the cell's material
-        // if new_state.as_str().unwrap() == "true" {
-        //     material.base_color = Color::rgb(1.0, 0.0, 0.0);
-        // } else {
-        //     material.base_color = Color::rgb(0.0, 0.0, 0.0);
-        // }
     }
-
 }
 
+const TICK: f64 = 1.0;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugins(PanOrbitCameraPlugin)
         .add_systems(Startup, setup)
-        .add_systems(Update, process_cells)
+        // add our system to the fixed timestep schedule
+        .add_systems(FixedUpdate, process_cells)
+        // configure our fixed timestep schedule to run twice a second
+        .insert_resource(Time::<Fixed>::from_seconds(0.5))
         .run();
 }
